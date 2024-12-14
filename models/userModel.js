@@ -1,4 +1,5 @@
 const { Schema, model } = require('mongoose');
+const { ROLES } = require('../utils/constants');
 
 const userSchema = new Schema({
     firstName: { type: String, default: "" },
@@ -8,6 +9,9 @@ const userSchema = new Schema({
     password: { type: String, select: false, default: null },
     isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
+    role: { type: String, enum: Object.values(ROLES) },
+    accessToken: { type: String, default: null },
+    refreshToken: { type: String, default: null },
 }, { timestamps: true, versionKey: false });
 
 // compile model from schema
