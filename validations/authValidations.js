@@ -26,7 +26,7 @@ exports.registerUserValidation = Joi.object({
         'any.only': 'Confirm password does not match with password.',
         'any.required': 'Confirm password is required.',
     }),
-    role: Joi.string().valid(...Object.values(ROLES)).required(),
+    role: Joi.string().valid(...Object.values(ROLES))
 });
 
 exports.sendCodeValidation = Joi.object({

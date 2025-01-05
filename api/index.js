@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const AuthAPI = require('./authApi');
-
+const PostAPI = require('./postApi');
 
 class API {
     constructor(app) {
@@ -11,10 +11,13 @@ class API {
 
     loadRouteGroups() {
         this.routeGroups.push(new AuthAPI());
+        this.routeGroups.push(new PostAPI());
     }
 
     setContentType(req, res, next) {
-        res.set('Content-Type', 'application/json');
+        if (!req.is('multipart/form-data')) {
+            res.set('Content-Type', 'application/json');
+        }
         next();
     }
 
