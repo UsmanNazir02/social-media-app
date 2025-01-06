@@ -75,22 +75,33 @@ export default function Home() {
     };
 
     const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        try {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
 
-        if (status !== 'granted') {
-            alert('Sorry, we need camera roll permissions to make this work!');
-            return;
-        }
+            const fileSelected = new Promise((resolve) => {
+                input.onchange = (e) => {
+                    const target = e.target as HTMLInputElement;
+                    if (target.files && target.files[0]) {
+                        const file = target.files[0];
+                        resolve({
+                            uri: URL.createObjectURL(file),
+                            type: file.type,
+                            name: file.name
+                        });
+                    }
+                };
+            });
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+            input.click();
 
-        if (!result.canceled) {
-            setFormData({ ...formData, media: result.assets[0] });
+            const result = await fileSelected;
+            setFormData({ ...formData, media: result as any });
+
+        } catch (error) {
+            console.error('Error picking image:', error);
+            setError('Failed to pick image');
         }
     };
 
@@ -110,52 +121,28 @@ export default function Home() {
                 return;
             }
 
-            // Create FormData object
             const form = new FormData();
-
-            // Append text fields
             form.append('title', formData.title.trim());
             form.append('text', formData.text.trim());
-
-            // Handle image if present
             if (formData.media) {
-                const localUri = formData.media.uri;
-                const filename = localUri.split('/').pop() || 'image.jpg';
-
-                // Infer the MIME type from the file extension
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1].toLowerCase()}` : 'image/jpeg';
-
-                // Create a Blob from the file URI if needed
-                const response = await fetch(localUri);
+                const response = await fetch(formData.media.uri);
                 const blob = await response.blob();
-
-                // Append the file with the correct structure
-                form.append('media', {
-                    uri: localUri,
-                    type: type,
-                    name: filename,
-                    size: blob.size,
-                } as any);
+                const file = new File([blob], formData.media.name || 'image.jpg', {
+                    type: formData.media.type || 'image/jpeg',
+                });
+                form.append('media', file);
             }
-
-            console.log('Sending form data:', {
-                title: formData.title,
-                text: formData.text,
-                media: formData.media ? 'present' : 'none'
-            });
 
             const response = await fetch('http://localhost:5021/api/post/create', {
                 method: 'POST',
                 headers: {
                     'Authorization': token,
-                    'Accept': 'application/json',
+                    // Remove Content-Type header to let browser set it with boundary
                 },
                 body: form,
             });
 
             const data = await response.json();
-            console.log('Create post response:', data);
 
             if (data.statusCode === 200) {
                 setModalVisible(false);
@@ -174,7 +161,6 @@ export default function Home() {
             setLoading(false);
         }
     };
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
