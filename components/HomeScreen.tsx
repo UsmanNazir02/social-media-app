@@ -22,7 +22,15 @@ interface Post {
     text: string;
     media: string | null;
     createdAt: string;
+    username: string;
+    user: User;
 }
+interface User {
+    _id: string;
+    username: string;
+    email: string;
+}
+
 
 export default function Home() {
     const [modalVisible, setModalVisible] = useState(false);
@@ -137,7 +145,6 @@ export default function Home() {
                 method: 'POST',
                 headers: {
                     'Authorization': token,
-                    // Remove Content-Type header to let browser set it with boundary
                 },
                 body: form,
             });
@@ -176,6 +183,7 @@ export default function Home() {
             <ScrollView style={styles.postsContainer}>
                 {posts.map((post) => (
                     <View key={post._id} style={styles.postCard}>
+                        <Text style={styles.username}>{post.user.username || 'Anonymous'}</Text>
                         <Text style={styles.postTitle}>{post.title}</Text>
                         <Text style={styles.postText}>{post.text}</Text>
                         {post.media && (
@@ -265,6 +273,12 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
+    username: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#555',
+        marginBottom: 4,
+    },
     container: {
         flex: 1,
         backgroundColor: '#D0F0E5',
