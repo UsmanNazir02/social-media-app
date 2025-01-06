@@ -52,3 +52,26 @@ exports.generateRefreshToken = (user) => {
 exports.generateRandomOTP = () => {
     return Math.floor(100000 + Math.random() * 900000);
 }
+
+exports.getMongooseAggregatePaginatedData = async ({
+    model, page = 1, limit = 10, query = []
+}) => {
+    const options = {
+        page,
+        limit,
+        customLabels: {
+            totalDocs: 'totalItems',
+            docs: 'data',
+            limit: 'perPage',
+            page: 'currentPage',
+            meta: 'pagination',
+        },
+    };
+
+    const myAggregate = model.aggregate(query);
+    const { data, pagination } = await model.aggregatePaginate(myAggregate, options);
+
+    delete pagination?.pagingCounter;
+
+    return { data, pagination };
+}

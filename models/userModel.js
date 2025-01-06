@@ -1,5 +1,7 @@
 const { Schema, model } = require('mongoose');
 const { ROLES } = require('../utils/constants');
+const { getMongooseAggregatePaginatedData } = require('../utils');
+const mongooseAggregatePaginate = require('mongoose-aggregate-paginate-v2');
 
 const userSchema = new Schema({
     firstName: { type: String, default: "" },
@@ -14,6 +16,8 @@ const userSchema = new Schema({
     refreshToken: { type: String, default: null },
 }, { timestamps: true, versionKey: false });
 
+userSchema.plugin(mongooseAggregatePaginate);
+
 // compile model from schema
 const UserModel = model('User', userSchema);
 
@@ -25,3 +29,15 @@ exports.findUser = (query) => UserModel.findOne({ ...query, isDeleted: false });
 
 // update user
 exports.updateUser = (query, obj) => UserModel.findOneAndUpdate(query, obj, { new: true });
+
+//getAllUsers
+exports.getAllUsers = async ({ query, page, limit }) => {
+    const { data, pagination } = await getMongooseAggregatePaginatedData({
+        model: UserModel,
+        query,
+        page,
+        limit,
+    });
+
+    return { users: data, pagination };
+};

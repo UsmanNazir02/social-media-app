@@ -1,10 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 // const { createPostValidation } = require('../validations/postValidation');
-const { createPost, getPosts } = require('../models/postModel');
+const { createPost, getPosts, findPost } = require('../models/postModel');
 const { parseBody, generateResponse } = require('../utils');
 const { STATUS_CODES } = require('../utils/constants');
 const Joi = require('joi');
+const { findFollowings } = require('../models/followingModel');
 
 
 exports.createNewPost = async (req, res, next) => {
@@ -61,9 +62,18 @@ exports.createNewPost = async (req, res, next) => {
 };
 
 //getPost of current user
+
 exports.getPosts = async (req, res, next) => {
     try {
-        const posts = await getPosts({ user: req.user.id }).populate('user', 'username email');
+        const followingList = await findFollowings({ user: req.user.id }).select('following');
+        const followingIds = followingList.map(f => f.following);
+
+        const userIds = [...followingIds, req.user.id];
+
+        const posts = await getPosts({ user: { $in: userIds } })
+            .populate('user', 'username email')
+            .sort({ createdAt: -1 });
+
         generateResponse(posts, 'Posts fetched successfully', res);
     } catch (error) {
         console.error('Error in getPosts:', error);
@@ -74,7 +84,6 @@ exports.getPosts = async (req, res, next) => {
     }
 };
 
-// getPostByID?
 exports.getPostById = async (req, res, next) => {
     try {
         const post = await getPosts({ _id: req.params.id });
@@ -87,3 +96,76 @@ exports.getPostById = async (req, res, next) => {
         });
     }
 };
+
+exports.toggleLike = async (req, res, next) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.user.id;
+
+        const post = await findPost(postId);
+
+        if (!post) {
+            return next({
+                statusCode: 404,
+                message: 'Post not found',
+            });
+        }
+
+        const hasLiked = post.likes && post.likes.includes(userId);
+
+        if (hasLiked) {
+            post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+            post.likeCount -= 1;
+        } else {
+            post.likes = [...(post.likes || []), userId];
+            post.likeCount += 1;
+        }
+
+        await post.save();
+        generateResponse({ likeCount: post.likeCount }, hasLiked ? 'Post unliked successfully' : 'Post liked successfully', res);
+    } catch (error) {
+        console.error('Error in toggleLike:', error);
+        next({
+            statusCode: 500,
+            message: error.message || 'Failed to toggle like',
+        });
+    }
+};
+
+exports.toggleDislike = async (req, res, next) => {
+    try {
+        const { postId } = req.params;
+        const userId = req.user.id;
+
+        const post = await findPost(postId);
+
+        if (!post) {
+            return next({
+                statusCode: 404,
+                message: 'Post not found',
+            });
+        }
+
+        const hasDisliked = post.dislikes && post.dislikes.includes(userId);
+
+        if (hasDisliked) {
+            post.dislikes = post.dislikes.filter(id => id.toString() !== userId.toString());
+            post.disLikeCount -= 1;
+        } else {
+            post.dislikes = [...(post.dislikes || []), userId];
+            post.disLikeCount += 1;
+        }
+
+        await post.save();
+
+        generateResponse({ disLikeCount: post.disLikeCount }, hasDisliked ? 'Post undisliked successfully' : 'Post disliked successfully', res);
+
+    } catch (error) {
+        console.error('Error in toggleDislike:', error);
+        next({
+            statusCode: 500,
+            message: error.message || 'Failed to toggle dislike',
+        });
+    }
+};
+
