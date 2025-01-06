@@ -21,23 +21,39 @@ DB_CONNECT();
 
 const httpServer = http.createServer(app);
 
-app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// File upload configuration
 app.use(fileUpload({
-    createParentPath: true,
     useTempFiles: true,
     tempFileDir: path.join(__dirname, 'tmp'),
+    createParentPath: true,
+    parseNested: true,
     debug: true,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB max file size
+    },
     abortOnLimit: true,
-    responseOnLimit: 'File size limit has been reached',
     safeFileNames: true,
-    preserveExtension: true
+    preserveExtension: true,
+    uploadTimeout: 60000, // 1 minute timeout
+    // Add this debug function
+    debug: function (debugText) {
+        console.log('File Upload Debug:', debugText);
+    }
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// CORS configuration
+app.use(cors({
+    origin: ['http://localhost:8081', 'http://localhost:19006'], // Add your Expo web port
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 
-// Make uploads directory accessible
+// Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(cookieSession({
