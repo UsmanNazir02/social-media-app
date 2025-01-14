@@ -28,8 +28,10 @@ exports.register = asyncHandler(async (req, res, next) => {
         // hash password
         const hashedPassword = await hash(body.password, 10);
         body.password = hashedPassword;
+        body.role = "user";
 
         // create user in db
+        // create user and set role as user
         let user = await createUser(body);
 
         // generate access token and refresh token

@@ -22,9 +22,8 @@ class AuthAPI {
         router.post('/register', register);
         router.post('/login', login);
         router.post('/logout', authMiddleware(Object.values(ROLES)), logout);
-
         router.post('/send-code', sendVerificationCode);
-        router.put('/verify-code', verifyCode);
+        router.put('/otp/verify-code', verifyCode);
         router.put('/reset-password', authMiddleware(Object.values(ROLES)), resetPassword);
         router.put('/refresh-token', getRefreshToken);
     }
