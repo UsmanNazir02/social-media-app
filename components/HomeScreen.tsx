@@ -167,17 +167,42 @@ export default function Home() {
         } finally {
             setLoading(false);
         }
+
+    };
+
+    const handleLogout = async () => {
+        try {
+            await AsyncStorage.removeItem('userToken');
+            router.replace('/');
+        } catch (err) {
+            console.error('Error logging out:', err);
+        }
     };
     return (
         <View style={styles.container}>
+
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>My Posts</Text>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Ionicons name="add" size={24} color="white" />
-                </TouchableOpacity>
+                <View style={styles.headerButtons}>
+                    <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => router.push('/search-screen')}
+                    >
+                        <Ionicons name="search" size={22} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={() => setModalVisible(true)}
+                    >
+                        <Ionicons name="add" size={22} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.iconButton}
+                        onPress={handleLogout}
+                    >
+                        <Ionicons name="log-out" size={22} color="white" />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             <ScrollView style={styles.postsContainer}>
@@ -287,7 +312,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 16,
+        padding: 10,
         backgroundColor: '#D0F2C0',
         borderBottomWidth: 1,
         borderBottomColor: '#28a745',
@@ -419,5 +444,17 @@ const styles = StyleSheet.create({
         color: 'red',
         marginBottom: 10,
         textAlign: 'center',
+    },
+    headerButtons: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    iconButton: {
+        backgroundColor: '#28a745',
+        width: 35,
+        height: 35,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
 });

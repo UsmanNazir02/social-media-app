@@ -15,7 +15,7 @@ const HomeScreen = () => (
 );
 
 export const RootNavigator = () => (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="Registration" component={Registration} />

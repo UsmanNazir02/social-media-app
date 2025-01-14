@@ -12,6 +12,7 @@ const Registration = () => {
         username: '',
         password: '',
         confirmPassword: '',
+        role: 'user',
     });
 
     const [error, setError] = useState('');
@@ -33,7 +34,7 @@ const Registration = () => {
                 setSuccess('Registration successful!');
                 setError('');
                 setTimeout(() => {
-                    router.replace('/home');
+                    router.replace('/');
                 }, 1500);
             } else {
                 setError(data.message || 'Registration failed');
